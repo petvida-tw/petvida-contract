@@ -515,13 +515,7 @@ body{
         </pre>
       </div>
 
-      <div class="checkRow">
-        <input id="agree" type="checkbox">
-        <label for="agree">我已完整閱讀並同意上述契約內容</label>
-      </div>
-    </div>
-
-    <div class="card">
+         <div class="card">
       <div class="sectionTitle">基本資料表</div>
       <div class="subText">以下資料將作為契約附件之一部分</div>
 
@@ -815,19 +809,25 @@ body{
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
+  function todayZh(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = d.getMonth()+1;
+    const dd = d.getDate();
+    return `${y}年${m}月${dd}日`;
+  }
+  if(signDate) signDate.value = todayZh();
+
   function formatYMD(v){
-  const digits = String(v || "").replace(/\D/g,"").slice(0,8);
-  const y = digits.slice(0,4);
-  const m = digits.slice(4,6);
-  const d = digits.slice(6,8);
-
-  let out = y;
-  if(m) out += "/" + m;
-  if(d) out += "/" + d;
-
-  return out;
-}
- 
+    const digits = String(v || "").replace(/\D/g,"").slice(0,8);
+    const y = digits.slice(0,4);
+    const m = digits.slice(4,6);
+    const d = digits.slice(6,8);
+    let out = y;
+    if(m) out += "/" + m;
+    if(d) out += "/" + d;
+    return out;
+  }
   if(petBirthday){
     petBirthday.addEventListener("input", (e) => {
       const start = e.target.selectionStart || 0;
@@ -1046,7 +1046,6 @@ body{
       emergencyName: requireValue(emergencyName, "緊急聯絡人"),
       emergencyPhone: requireValue(emergencyPhone, "緊急聯絡人電話"),
       ownerEmail: requireValue(ownerEmail, "Email（寄送附本用）"),
-      ownerIdNo: requireValue(ownerIdNo, "身分證字號"),
       ownerAddress: requireValue(ownerAddress, "通訊地址"),
 
       isOwnerSelf,
@@ -1232,6 +1231,3 @@ ${completeNote}`;
   };
 })();
 </script>
-
-</body>
-</html>
