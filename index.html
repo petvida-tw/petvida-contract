@@ -309,7 +309,7 @@ body{
       storeAddress: "臺北市中山區朱崙里長安東路2段220號",
       storeLine: "@petvida.tw",
       liffId: "2009467152-zsuoXKvy",
-      googleScriptUrl: "https://share.google/Yu5iz7QnTdCHa9961",
+      googleScriptUrl: "https://script.google.com/macros/s/AKfycbzXiNU_WN1OewDgKXBnKE_id1eOK2ozxWeWyJ1N-1mJQyhhnDdctp58bXY8Ih2u1TVz/exec",
       sharedSecret: "1201"
     };
   </script>
@@ -815,22 +815,19 @@ body{
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  function todayZh(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = d.getMonth()+1;
-    const dd = d.getDate();
-    return `${y}年${m}月${dd}日`;
-  }
-  if(signDate) signDate.value = todayZh();
-
   function formatYMD(v){
-    const digits = String(v || "").replace(/\D/g,"").slice(0,8);
-    const y = digits.slice(0,4);
-    const m = digits.slice(4,6);
-    const d = digits.slice(6,8);
-    let out = y;
-  }
+  const digits = String(v || "").replace(/\D/g,"").slice(0,8);
+  const y = digits.slice(0,4);
+  const m = digits.slice(4,6);
+  const d = digits.slice(6,8);
+
+  let out = y;
+  if(m) out += "/" + m;
+  if(d) out += "/" + d;
+
+  return out;
+}
+ 
   if(petBirthday){
     petBirthday.addEventListener("input", (e) => {
       const start = e.target.selectionStart || 0;
