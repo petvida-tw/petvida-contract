@@ -1199,7 +1199,38 @@ font-size:16px;">動物醫院地址</div>
 </div>
 
 <div class="card">
-<div class="sectionTitle">簽名</div>
+<div class="sectionTitle"><div class="card">
+
+<div class="sectionTitle">寶貝影像使用授權</div>
+
+<div class="subText">
+美容服務期間，我們可能會為寶貝拍攝照片或影片，作為服務紀錄及作品紀錄。
+</div>
+
+<div class="label">是否同意寶貝影像使用</div>
+
+<div class="choiceRow">
+
+<label class="choice">
+<input type="radio" name="mediaConsent" value="同意使用">
+同意使用
+</label>
+
+<label class="choice">
+<input type="radio" name="mediaConsent" value="不同意使用">
+不同意使用
+</label>
+
+</div>
+
+<div class="infoBox" style="margin-top:10px;">
+<div class="meta" style="font-size:14px; font-weight:600;">
+若選擇同意，PETVIDA 可能會將美容服務期間拍攝的寶貝照片或影片，用於官方社群媒體、網站、作品分享，以及品牌宣傳等相關商業用途。<br><br>
+若之後希望調整影像使用意願，也可以隨時告知我們，不影響寶貝的美容服務。
+</div>
+</div>
+
+</div></div>
 
 <div class="subText">
 
@@ -1914,7 +1945,8 @@ vaccination: getRadio("vaccination"),
 deworming: getRadio("deworming"),
 haircutRequest: requireValue(haircutRequest, "剪毛需求（不剪毛請填「無」）"),
 bathFrequency: requireValue(bathFrequency, "洗澡頻率"),
-bathMethod: getRadio("bathMethod")
+bathMethod: getRadio("bathMethod"),
+mediaConsent: getRadio("mediaConsent")
 };
 
 if(Object.values(data).some(v => v === null)){
@@ -1946,7 +1978,11 @@ setError("請選擇：洗澡方式");
 resetSubmit();
 return;
 }
-
+if(!data.mediaConsent){
+setError("請選擇：是否同意寶貝影像使用");
+resetSubmit();
+return;
+}
 if(!isValidDateString(data.petBirthday)){
 
 setError("寵物生日格式不正確，請輸入有效日期");
@@ -2126,6 +2162,8 @@ ${otherInjuryTextLine}
 
 洗澡方式：${data.bathMethod}
 
+【寶貝影像使用授權】
+影像使用：${data.mediaConsent}
 
 
 審閱/簽署日期：${data.signDate}
