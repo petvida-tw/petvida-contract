@@ -535,6 +535,27 @@ font-size:14px;
 text-align:center;
 
 }
+  .photoUploadBox{
+  border:1.4px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  background:#F9FEFE;
+  box-shadow:var(--shadow-sm);
+}
+
+.photoPickBtn{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:14px;
+  border-radius:14px;
+  background:#E8F6F8;
+  color:var(--text);
+  font-size:17px;
+  font-weight:900;
+  cursor:pointer;
+}
 
 </style>
 
@@ -1146,9 +1167,44 @@ font-size:16px;">動物醫院地址</div>
 </div>
 
 <div class="label">③ 寶貝照片</div>
-<div class="checkRow">
-<input id="photoConfirmed" type="checkbox">
-<label for="photoConfirmed">我已於 LINE 聊天室提供寶貝近期清楚照片</label>
+
+<div class="photoUploadBox">
+
+  <input
+    id="petPhoto"
+    type="file"
+    accept="image/*"
+    style="display:none;"
+  >
+
+  <label for="petPhoto" class="photoPickBtn">
+    ＋ 選擇寶貝近期清楚照片
+  </label>
+
+  <div id="photoPreviewWrap" class="hidden" style="margin-top:12px;">
+    <img
+      id="photoPreview"
+      alt="寶貝照片預覽"
+      style="
+        width:120px;
+        height:120px;
+        object-fit:cover;
+        border-radius:16px;
+        border:1.4px solid var(--border);
+      "
+    >
+
+    <div
+      id="photoFileName"
+      style="
+        margin-top:6px;
+        font-size:14px;
+        color:var(--muted);
+        font-weight:700;
+      "
+    ></div>
+  </div>
+
 </div>
 
 <div class="label">④ 是否有定期施打預防針與驅蟲</div>
@@ -1376,7 +1432,13 @@ const vetAddress = document.getElementById("vetAddress");
 const groomingHistory = document.getElementById("groomingHistory");
 const appointmentDate = document.getElementById("appointmentDate");
 const serviceItem = document.getElementById("serviceItem");
-const photoConfirmed = document.getElementById("photoConfirmed");
+const petPhoto = document.getElementById("petPhoto");
+const photoPreview = document.getElementById("photoPreview");
+const photoPreviewWrap = document.getElementById("photoPreviewWrap");
+const photoFileName = document.getElementById("photoFileName");
+
+let petPhotoDataUrl = "";
+let petPhotoName = "";
 const haircutRequest = document.getElementById("haircutRequest");
 const bathFrequency = document.getElementById("bathFrequency");
 
@@ -1407,6 +1469,131 @@ msg.textContent = t || "";
 msg.style.color = "#111";
 
 }
+  function compressPetPhoto(file){
+
+  return new Promise((resolve, reject) => {
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+
+      try{
+
+        const MAX_SIZE = 1600;
+
+        let width = img.naturalWidth;
+        let height = img.naturalHeight;
+
+        const scale = Math.min(
+          1,
+          MAX_SIZE / Math.max(width, height)
+        );
+
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+
+        const c = document.createElement("canvas");
+        c.width = width;
+        c.height = height;
+
+        const cctx = c.getContext("2d");
+
+        cctx.drawImage(
+          img,
+          0,
+          0,
+          width,
+          height
+        );
+
+        const dataUrl = c.toDataURL(
+          "image/jpeg",
+          0.82
+        );
+
+        resolve(dataUrl);
+
+      }catch(err){
+
+        reject(err);
+
+      }finally{
+
+        URL.revokeObjectURL(objectUrl);
+
+      }
+
+    };
+
+    img.onerror = () => {
+
+      URL.revokeObjectURL(objectUrl);
+
+      reject(
+        new Error("照片讀取失敗，請重新選擇照片")
+      );
+
+    };
+
+    img.src = objectUrl;
+
+  });
+
+}
+
+
+petPhoto.addEventListener("change", async () => {
+
+  const file = petPhoto.files?.[0];
+
+  petPhotoDataUrl = "";
+  petPhotoName = "";
+
+  if(!file){
+
+    photoPreviewWrap.classList.add("hidden");
+    return;
+
+  }
+
+  if(!file.type.startsWith("image/")){
+
+    setError("請選擇照片檔案");
+    petPhoto.value = "";
+    return;
+
+  }
+
+  try{
+
+    setOK("照片處理中...");
+
+    petPhotoDataUrl = await compressPetPhoto(file);
+
+    petPhotoName = file.name || "寶貝照片";
+
+    photoPreview.src = petPhotoDataUrl;
+    photoFileName.textContent = "✓ 已選擇照片";
+
+    photoPreviewWrap.classList.remove("hidden");
+
+    setOK("");
+
+  }catch(err){
+
+    petPhoto.value = "";
+    petPhotoDataUrl = "";
+
+    photoPreviewWrap.classList.add("hidden");
+
+    setError(
+      err.message || "照片處理失敗，請重新選擇"
+    );
+
+  }
+
+});
 
 function requireValue(inputEl, label){
 
@@ -1940,7 +2127,7 @@ vetAddress: (vetMode === "甲方指定") ? requireValue(vetAddress,
 groomingHistory: requireValue(groomingHistory, "過去美容經驗"),
 appointmentDate: requireValue(appointmentDate, "預約日期"),
 serviceItem: requireValue(serviceItem, "服務項目"),
-photoConfirmed: !!photoConfirmed?.checked,
+photoConfirmed: !!petPhotoDataUrl,
 vaccination: getRadio("vaccination"),
 deworming: getRadio("deworming"),
 haircutRequest: requireValue(haircutRequest, "剪毛需求（不剪毛請填「無」）"),
@@ -1958,10 +2145,15 @@ return;
 }
 
 if(!data.photoConfirmed){
-setError("請確認已於 LINE 聊天室提供寶貝近期清楚照片");
-photoConfirmed?.focus();
-resetSubmit();
-return;
+
+  setError("請上傳寶貝近期清楚照片");
+
+  petPhoto?.focus();
+
+  resetSubmit();
+
+  return;
+
 }
 if(!data.vaccination){
 setError("請選擇：預防針施打狀況");
@@ -2205,6 +2397,8 @@ secret: SHARED_SECRET,
 data,
 
 signatureDataUrl,
+
+petPhotoDataUrl,
 
 line: {
 
