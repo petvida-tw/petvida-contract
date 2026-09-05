@@ -1255,8 +1255,7 @@ font-size:16px;">動物醫院地址</div>
 </div>
 
 <div class="card">
-<div class="sectionTitle"><div class="card">
-
+  
 <div class="sectionTitle">寶貝影像使用授權</div>
 
 <div class="subText" style="font-size:14px;">
@@ -2342,7 +2341,7 @@ ${otherInjuryTextLine}
 
 服務項目：${data.serviceItem}
 
-寶貝照片：已於 LINE 提供
+寶貝照片：已上傳並傳送至 LINE
 
 預防針：${data.vaccination}
 
@@ -2376,6 +2375,7 @@ const contractText = (document.getElementById("contractText")?.innerText
 
 const signatureDataUrl = canvas.toDataURL("image/png");
 
+let serverResult = {};
 if(GOOGLE_SCRIPT_URL && SHARED_SECRET){
 
 let res;
@@ -2422,31 +2422,69 @@ throw new Error("資料上傳失敗，請稍後再試");
 
 try{
 
-result = await res.json();
+serverResult = await res.json();
 
 }catch(e){
 
 throw new Error("伺服器回傳格式異常，請聯絡店家");
 
 }
+  
+if(!res.ok || !serverResult.ok){
 
-if(!res.ok || !result.ok){
-
-throw new Error(result.error || "副本寄送失敗，請稍後再試");
+throw new Error(
+  serverResult.error ||
+  "副本寄送失敗，請稍後再試"
+);
 
 }
-
+  
 }
 
 if(liffState.inClient){
 
-await liff.sendMessages([{ type:"text", text:textMsg }]);
+  const lineMessages = [
 
-setOK("資料已送出！\n可以回到聊天室了！");
+    {
+      type: "text",
+      text: textMsg
+    }
+
+  ];
+
+  if(serverResult.photoUrl){
+
+    lineMessages.push({
+
+      type: "image",
+
+      originalContentUrl:
+        serverResult.photoUrl,
+
+      previewImageUrl:
+        serverResult.photoUrl
+
+    });
+
+  }else{
+
+    throw new Error(
+      "寶貝照片傳送失敗，請重新送出"
+    );
+
+  }
+
+  await liff.sendMessages(lineMessages);
+
+  setOK(
+    "資料已送出！\n可以回到聊天室了！"
+  );
 
 }else{
 
-setOK("資料已送出！\n契約副本將寄送至您的 Email！");
+  setOK(
+    "資料已送出！\n契約副本將寄送至您的 Email！"
+  );
 
 }
 
